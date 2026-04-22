@@ -1,0 +1,32 @@
+// 浏览器功能所需的Gradle依赖
+// 请将以下内容添加到 app/build.gradle 文件的 dependencies 块中:
+
+/*
+dependencies {
+    // 网络请求库
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
+    // 内嵌HTTP服务器
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    
+    // JSON序列化（可选，用于优化设置存储）
+    implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Kotlin协程
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    
+    // AndroidX核心库
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    
+    // Activity Result API
+    implementation("androidx.activity:activity-ktx:1.8.2")
+}
+*/
+
+// 注意：
+// 1. 确保在 app/build.gradle 的 android 块中启用 viewBinding（可选）
+// 2. 确保 minSdkVersion >= 21 (Android 5.0)
+// 3. 确保 targetSdkVersion >= 34 (Android 14)
+// 4. 如果目标SDK >= 33，需要动态请求通知权限
+// 5. 如果目标SDK >= 29，需要处理分区存储
