@@ -28,7 +28,6 @@ class SimpleWebServer(
         fun start(context: Context, port: Int = ServerConfig.DEFAULT_PORT): SimpleWebServer? {
             return try {
                 instance?.stop()
-                instance?.awaitShutdown()
                 
                 val server = SimpleWebServer(context.applicationContext, port)
                 server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
@@ -56,8 +55,7 @@ class SimpleWebServer(
             for (fallbackPort in ServerConfig.FALLBACK_PORTS) {
                 try {
                     instance?.stop()
-                    instance?.awaitShutdown()
-                    
+
                     val server = SimpleWebServer(context.applicationContext, fallbackPort)
                     server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
                     
@@ -77,7 +75,6 @@ class SimpleWebServer(
         fun stop() {
             try {
                 instance?.stop()
-                instance?.awaitShutdown()
             } catch (e: Exception) {
                 Log.e(TAG, "Error stopping server", e)
             } finally {
@@ -110,7 +107,7 @@ class SimpleWebServer(
         
         fun getServerUrl(): String {
             val ip = getLocalIpAddress() ?: "localhost"
-            return "http://$ip:${instance?.listeningPort ?: serverPort}"
+            return "http://$ip:${instance?.getListeningPort() ?: serverPort}"
         }
         
         fun isRunning(): Boolean = instance?.wasStarted() == true
@@ -262,8 +259,4 @@ class SimpleWebServer(
         }
     }
     
-    override fun onShutdown() {
-        super.onShutdown()
-        Log.i(TAG, "Server shutdown")
-    }
 }
