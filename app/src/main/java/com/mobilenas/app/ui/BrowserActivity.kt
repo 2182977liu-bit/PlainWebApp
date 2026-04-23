@@ -1,4 +1,4 @@
-package com.example.plainapp.ui
+package com.mobilenas.app.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -10,11 +10,11 @@ import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.plainapp.server.SimpleWebServer
+import com.mobilenas.app.server.SimpleWebServer
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import com.example.plainapp.R
+import com.mobilenas.app.R
 
 class BrowserActivity : AppCompatActivity() {
     

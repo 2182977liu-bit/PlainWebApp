@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.plainapp'
+    namespace 'com.mobilenas.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.plainapp"
+        applicationId "com.mobilenas.app"
         minSdk 21
         targetSdk 34
         versionCode 1

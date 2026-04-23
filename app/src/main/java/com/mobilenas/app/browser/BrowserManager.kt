@@ -1,4 +1,4 @@
-package com.example.plainapp.browser
+package com.mobilenas.app.browser
 
 import android.content.Context
 import android.util.Log

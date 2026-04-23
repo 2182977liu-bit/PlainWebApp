@@ -1,8 +1,8 @@
-package com.example.plainapp.server
+package com.mobilenas.app.server
 
 import android.content.Context
 import android.util.Log
-import com.example.plainapp.browser.BrowserManager
+import com.mobilenas.app.browser.BrowserManager
 import fi.iki.elonen.NanoHTTPD
 import java.io.IOException
 import java.net.InetAddress

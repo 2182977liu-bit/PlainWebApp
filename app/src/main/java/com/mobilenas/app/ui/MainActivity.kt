@@ -1,4 +1,4 @@
-package com.example.plainapp.ui
+package com.mobilenas.app.ui
 
 import android.content.Intent
 import android.os.Bundle
