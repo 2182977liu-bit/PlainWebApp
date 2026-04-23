@@ -23,11 +23,29 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Generate signing keystore
+        run: |
+          keytool -genkeypair \
+            -v \
+            -keystore app/release.keystore \
+            -alias mobilenas \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass mobilenas123 \
+            -keypass mobilenas123 \
+            -dname "CN=MobileNAS, OU=Dev, O=MobileNAS, L=Unknown, ST=Unknown, C=CN"
+
       - name: Build with Gradle
+        env:
+          KEYSTORE_FILE: release.keystore
+          KEYSTORE_PASSWORD: mobilenas123
+          KEY_ALIAS: mobilenas
+          KEY_PASSWORD: mobilenas123
         run: ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: plainapp-release-apk
+          name: mobilenas-release-apk
           path: app/build/outputs/apk/release/*.apk
