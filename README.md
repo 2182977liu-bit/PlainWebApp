@@ -1,21 +1,18 @@
-# PlainApp - 通过浏览器管理手机
+# 手机NAS (MobileNAS) - 通过浏览器管理手机
 
-PlainApp 是一个开源的 Android 应用，允许用户通过 Web 浏览器安全地管理手机内容。
+手机NAS是一个开源的Android应用，允许用户通过Web浏览器安全地管理手机内容。
 
 ## 功能特性
 
-- 📁 **文件管理** - 浏览和管理手机文件系统
-- 🎵 **媒体管理** - 查看和管理照片、视频、音乐
-- 👤 **联系人** - 查看和管理联系人
-- 💬 **短信** - 查看和管理短信
-- 📱 **应用管理** - 查看已安装应用，支持APK导出
-- 📞 **通话记录** - 查看通话记录
-- 🔔 **通知中心** - 实时查看手机通知
-- 📺 **屏幕镜像** - 将手机屏幕镜像到浏览器
+- 🌐 **内置浏览器** - 通过手机本地服务器提供Web浏览体验
+- 📥 **下载管理** - 支持文件下载、进度跟踪、下载历史
+- ⚙️ **自定义设置** - 可配置主页、搜索引擎、下载路径等
+- 🔒 **隐私模式** - 支持无痕浏览
+- 📱 **本地服务器** - 内嵌NanoHTTPD服务器，多端口自动回退
 
 ## 构建状态
 
-![Android CI](https://github.com/plainhub/plain-app/workflows/Android%20CI/badge.svg)
+[![Android CI](https://github.com/2182977liu-bit/MobileNAS/actions/workflows/android-build.yml/badge.svg)](https://github.com/2182977liu-bit/MobileNAS/actions)
 
 ## 如何使用
 
@@ -37,10 +34,10 @@ PlainApp 是一个开源的 Android 应用，允许用户通过 Web 浏览器安
 
 ```bash
 # 克隆仓库
-git clone https://github.com/plainhub/plain-app.git
+git clone https://github.com/2182977liu-bit/MobileNAS.git
 
 # 进入项目目录
-cd plain-app
+cd MobileNAS
 
 # 构建Release APK
 ./gradlew assembleRelease
@@ -56,3 +53,26 @@ cd plain-app
 ## 许可证
 
 AGPL-3.0
+
+---
+
+## 更新日志
+
+### v1.0.0 (2026-04-23)
+
+#### 重构
+- 项目更名为「手机NAS (MobileNAS)」
+- 包名从 `com.example.plainapp` 变更为 `com.mobilenas.app`
+- Application 类从 `PlainAppApplication` 重命名为 `MobileNASApplication`
+
+#### 修复
+- 添加缺失的 Gradle Wrapper 文件（gradlew、gradlew.bat、gradle-wrapper.jar）
+- 创建缺失的 MainActivity.kt（Manifest 中声明的启动 Activity）
+- 创建缺失的应用图标资源（mipmap-hdpi/mdpi/xhdpi/xxhdpi/xxxhdpi）
+- 修复 BrowserHttpHandler 错误继承 NanoHTTPD（2.3.1 无对应构造函数），改为普通类
+- 修复 SimpleWebServer 调用 NanoHTTPD 2.3.1 中不存在的 API（awaitShutdown、onShutdown、listeningPort）
+- 修复 suspend 函数在非协程环境中直接调用的问题（使用 runBlocking 包装）
+- 添加 BrowserManager.kt 中缺失的 URLDecoder import
+
+#### 新功能
+- 初始化项目，包含浏览器功能和 GitHub Actions 自动构建
