@@ -5,9 +5,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     
     <application
         android:name=".MobileNASApplication"
@@ -30,10 +35,15 @@
         </activity>
         
         <activity
-            android:name=".ui.BrowserActivity"
+            android:name=".ui.ServerActivity"
             android:exported="true"
-            android:label="浏览器"
+            android:label="手机NAS"
             android:theme="@style/AppTheme" />
+        
+        <service
+            android:name=".service.ServerService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         
     </application>
     

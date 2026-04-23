@@ -1,13 +1,22 @@
 buildscript {
-    ext.kotlin_version = '1.9.20'
+    ext.kotlin_version = '1.9.22'
+    ext.ktor_version = '2.3.7'
+    ext.room_version = '2.6.1'
+    ext.ksp_version = '1.9.22-1.0.17'
+
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
     }
+}
+
+plugins {
+    id 'com.google.devtools.ksp' version "$ksp_version" apply false
 }
 
 allprojects {

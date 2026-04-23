@@ -1,0 +1,12 @@
+package com.mobilenas.app.data.db.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
+
+@Serializable
+@Entity(tableName = "app_settings")
+data class AppSettingsEntity(
+    @PrimaryKey val key: String,
+    val value: String
+)

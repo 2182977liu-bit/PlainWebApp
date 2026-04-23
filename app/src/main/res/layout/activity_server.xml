@@ -3,62 +3,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp"
-    android:gravity="center_horizontal">
-    
+    android:gravity="center"
+    android:padding="24dp">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="PlainApp 浏览器"
-        android:textSize="24sp"
+        android:text="手机NAS"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:layout_marginBottom="20dp" />
-    
+        android:layout_marginBottom="32dp" />
+
     <TextView
         android:id="@+id/serverUrlText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="服务器未运行"
+        android:text="服务器未启动"
         android:textSize="16sp"
-        android:layout_marginBottom="30dp"
-        android:visibility="gone" />
-    
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="24dp" />
+
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="20dp">
-        
+        android:gravity="center">
+
         <Button
             android:id="@+id/startServerBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="启动服务器"
-            android:layout_marginEnd="10dp" />
-        
+            android:layout_marginEnd="8dp" />
+
         <Button
             android:id="@+id/stopServerBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="停止服务器"
-            android:enabled="false" />
-    
+            android:enabled="false"
+            android:layout_marginStart="8dp" />
     </LinearLayout>
-    
+
     <Button
         android:id="@+id/openBrowserBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="打开浏览器"
+        android:layout_marginTop="16dp"
         android:enabled="false" />
-    
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="提示：在浏览器中访问网页，下载的内容将直接保存到手机"
-        android:textSize="14sp"
-        android:textColor="#666"
-        android:layout_marginTop="30dp"
-        android:gravity="center" />
 
 </LinearLayout>
