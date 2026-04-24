@@ -14,6 +14,7 @@ data class DownloadEntity(
     val mimeType: String = "",
     val totalSize: Long = 0,
     val downloadedSize: Long = 0,
+    val progress: Int = 0,
     val status: String = "pending", // pending, downloading, completed, failed
     val filePath: String = "",
     val createdAt: Long = System.currentTimeMillis()
