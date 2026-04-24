@@ -118,16 +118,16 @@ class KtorServer(private val context: Context) {
         }
     }
 
-    fun isAlive(): Boolean = try { server?.resolve()?.isRunning ?: false } catch (e: Exception) { false }
+    fun isAlive(): Boolean = (server as? NettyApplicationEngine)?.engine?.isRunning ?: false
 
     private fun Routing.staticFiles() {
         get("/{path...}") {
             val path = call.parameters.getAll("path")?.joinToString("/") ?: ""
-            serveStaticFile(path)
+            serveStaticFile(call, path)
         }
     }
 
-    private suspend fun serveStaticFile(path: String) {
+    private suspend fun serveStaticFile(call: ApplicationCall, path: String) {
         try {
             val assetPath = if (path.isEmpty() || path == "/") "web/index.html" else "web/$path"
             val inputStream = context.assets.open(assetPath)
@@ -208,7 +208,7 @@ class KtorServer(private val context: Context) {
 
     private fun Route.cacheRoutes() {
         delete("/cache") {
-            val browserCache = File(context.cacheDir, "browser_cache")
+            val browserCache = File(context.applicationContext.cacheDir, "browser_cache")
             if (browserCache.exists()) {
                 browserCache.deleteRecursively()
             }
