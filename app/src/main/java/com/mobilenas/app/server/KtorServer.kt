@@ -7,13 +7,11 @@ import com.mobilenas.app.data.repository.SettingsRepository
 import com.mobilenas.app.util.FileUtil
 import com.mobilenas.app.util.NetworkUtils
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.autohead.*
-import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -88,7 +86,6 @@ class KtorServer(private val context: Context) {
                     install(Compression) {
                         gzip()
                     }
-                    install(CallLogging)
                     install(AutoHeadResponse)
                     install(ConditionalHeaders)
                     install(PartialContent)
@@ -121,7 +118,7 @@ class KtorServer(private val context: Context) {
         }
     }
 
-    fun isAlive(): Boolean = server?.engine?.isRunning ?: false
+    fun isAlive(): Boolean = try { server?.resolve()?.isRunning ?: false } catch (e: Exception) { false }
 
     private fun Routing.staticFiles() {
         get("/{path...}") {
@@ -130,7 +127,7 @@ class KtorServer(private val context: Context) {
         }
     }
 
-    private suspend fun PipelineContext<Unit, ApplicationCall>.serveStaticFile(path: String) {
+    private suspend fun serveStaticFile(path: String) {
         try {
             val assetPath = if (path.isEmpty() || path == "/") "web/index.html" else "web/$path"
             val inputStream = context.assets.open(assetPath)
@@ -139,11 +136,8 @@ class KtorServer(private val context: Context) {
             inputStream.close()
             val content = bytes.toByteArray()
             val mimeType = FileUtil.getMimeType(path)
-            call.respondBytes(content, ContentType.parse(mimeType)) {
-                cacheControl(listOf(CachingOptions(CacheControl.MaxAge(3600))))
-            }
+            call.respondBytes(content, ContentType.parse(mimeType))
         } catch (e: Exception) {
-            // SPA fallback: serve index.html for unknown routes
             try {
                 val indexStream = context.assets.open("web/index.html")
                 val bytes = ByteArrayOutputStream()
@@ -181,7 +175,6 @@ class KtorServer(private val context: Context) {
         }
 
         post("/downloads") {
-            // Download creation handled by DownloadService
             call.respond(mapOf("message" to "Use DownloadService to start downloads"))
         }
     }
@@ -209,15 +202,13 @@ class KtorServer(private val context: Context) {
         get("/browser/proxy") {
             val url = call.request.queryParameters["url"]
                 ?: return@get call.respondText("Missing url parameter", status = HttpStatusCode.BadRequest)
-            // Browser proxy - fetch URL via OkHttp (simplified, full impl in DownloadService)
             call.respondText("Proxy endpoint - use DownloadService", status = HttpStatusCode.NotImplemented)
         }
     }
 
     private fun Route.cacheRoutes() {
         delete("/cache") {
-            val cacheDir = context.cacheDir
-            val browserCache = File(cacheDir, "browser_cache")
+            val browserCache = File(context.cacheDir, "browser_cache")
             if (browserCache.exists()) {
                 browserCache.deleteRecursively()
             }
