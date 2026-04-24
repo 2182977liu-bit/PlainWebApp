@@ -208,7 +208,7 @@ class KtorServer(private val context: Context) {
 
     private fun Route.cacheRoutes() {
         delete("/cache") {
-            val browserCache = File(context.getCacheDir(), "browser_cache")
+            val browserCache = File(this@KtorServer.context.getCacheDir(), "browser_cache")
             if (browserCache.exists()) {
                 browserCache.deleteRecursively()
             }
