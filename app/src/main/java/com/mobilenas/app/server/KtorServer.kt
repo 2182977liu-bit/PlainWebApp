@@ -118,7 +118,7 @@ class KtorServer(private val context: Context) {
         }
     }
 
-    fun isAlive(): Boolean = (server as? NettyApplicationEngine)?.engine?.isRunning ?: false
+    fun isAlive(): Boolean = try { (server as? NettyApplicationEngine)?.environment?.start() != null } catch (_: Exception) { false }
 
     private fun Routing.staticFiles() {
         get("/{path...}") {
@@ -208,7 +208,7 @@ class KtorServer(private val context: Context) {
 
     private fun Route.cacheRoutes() {
         delete("/cache") {
-            val browserCache = File(context.applicationContext.cacheDir, "browser_cache")
+            val browserCache = File(context.cacheDir, "browser_cache")
             if (browserCache.exists()) {
                 browserCache.deleteRecursively()
             }
