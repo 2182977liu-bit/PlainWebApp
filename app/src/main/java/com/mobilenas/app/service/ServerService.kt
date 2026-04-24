@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import com.mobilenas.app.R
 import com.mobilenas.app.server.KtorServer
+import com.mobilenas.app.server.MDnsHelper
 import com.mobilenas.app.ui.ServerActivity
 import com.mobilenas.app.util.NetworkUtils
 
@@ -46,6 +47,13 @@ class ServerService : Service() {
         val notification = buildNotification()
         startForeground(NOTIFICATION_ID, notification)
         KtorServer.start(applicationContext)
+        // Register mDNS after a short delay to ensure server port is known
+        Thread {
+            try { Thread.sleep(2000) } catch (_: Exception) {}
+            val url = KtorServer.getServerUrl()
+            val port = url.substringAfterLast(":").toIntOrNull() ?: 8080
+            MDnsHelper.register(applicationContext, port)
+        }.start()
     }
 
     private fun buildNotification(): Notification {

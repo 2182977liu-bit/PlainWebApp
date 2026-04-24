@@ -2,53 +2,1350 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手机NAS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MobileNAS - 手机管理面板</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .container { text-align: center; padding: 40px; }
-        h1 { font-size: 2em; margin-bottom: 16px; color: #667eea; }
-        p { color: #666; font-size: 1.1em; margin-bottom: 24px; }
-        .status { display: inline-block; padding: 8px 20px; border-radius: 20px; background: #e8f5e9; color: #2e7d32; font-size: 0.9em; }
-        .api-test { margin-top: 32px; text-align: left; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
-        .api-test h3 { margin-bottom: 12px; }
-        .api-test button { padding: 8px 16px; margin: 4px; border: none; border-radius: 6px; background: #667eea; color: white; cursor: pointer; }
-        .api-test button:hover { background: #5a6fd6; }
-        .api-test pre { background: #f8f9fa; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; margin-top: 8px; max-height: 200px; overflow-y: auto; }
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd6;
+            --primary-light: #8b9cf7;
+            --primary-bg: rgba(102, 126, 234, 0.08);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.08);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.08);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.08);
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --sidebar-width: 260px;
+            --header-height: 56px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; outline: none; font-family: inherit; }
+        input { font-family: inherit; outline: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* ===== App Layout ===== */
+        #app { display: flex; min-height: 100vh; }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex; flex-direction: column;
+            transition: transform var(--transition);
+            box-shadow: var(--shadow);
+        }
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-header .logo { font-size: 1.5rem; }
+        .sidebar-header h1 {
+            font-size: 1.15rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 14px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); font-size: 0.935rem; font-weight: 500;
+            transition: all var(--transition); cursor: pointer;
+            margin-bottom: 2px; user-select: none;
+        }
+        .nav-item:hover { background: var(--primary-bg); color: var(--primary); }
+        .nav-item.active {
+            background: var(--primary-bg); color: var(--primary); font-weight: 600;
+        }
+        .nav-item .icon { font-size: 1.25rem; width: 24px; text-align: center; flex-shrink: 0; }
+        .sidebar-footer {
+            padding: 14px 20px; border-top: 1px solid var(--border);
+            font-size: 0.8rem; color: var(--text-muted);
+        }
+        .sidebar-footer .ws-status {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ws-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--text-muted); flex-shrink: 0;
+        }
+        .ws-dot.connected { background: var(--success); }
+        .ws-dot.connecting { background: var(--warning); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* ===== Overlay ===== */
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35); z-index: 99;
+            opacity: 0; transition: opacity var(--transition);
+        }
+        .sidebar-overlay.show { display: block; opacity: 1; }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            flex: 1; margin-left: var(--sidebar-width);
+            min-height: 100vh; display: flex; flex-direction: column;
+            transition: margin-left var(--transition);
+        }
+
+        /* ===== Header ===== */
+        .top-header {
+            height: var(--header-height);
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+            position: sticky; top: 0; z-index: 50;
+            box-shadow: var(--shadow);
+        }
+        .hamburger {
+            display: none; background: none; font-size: 1.4rem;
+            padding: 6px; border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+        }
+        .hamburger:hover { background: var(--primary-bg); }
+        .page-title {
+            font-size: 1.05rem; font-weight: 600; color: var(--text);
+        }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+
+        /* ===== Page Container ===== */
+        .page-container {
+            flex: 1; padding: 20px; max-width: 1200px; width: 100%; margin: 0 auto;
+        }
+
+        /* ===== Cards ===== */
+        .card {
+            background: var(--card); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px;
+            transition: box-shadow var(--transition);
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-title {
+            font-size: 0.95rem; font-weight: 600; color: var(--text);
+            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            font-size: 0.875rem; font-weight: 500;
+            transition: all var(--transition); white-space: nowrap;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-ghost {
+            background: transparent; color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary-light); }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .btn-icon { padding: 6px; font-size: 1rem; min-width: 32px; height: 32px; border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); }
+        .btn-icon:hover { background: var(--primary-bg); color: var(--primary); }
+
+        /* ===== Loading Spinner ===== */
+        .spinner-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 16px; }
+        .spinner {
+            width: 36px; height: 36px; border: 3px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-text { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* ===== Error Message ===== */
+        .error-msg {
+            background: var(--danger-bg); color: var(--danger);
+            padding: 12px 16px; border-radius: var(--radius-sm);
+            font-size: 0.875rem; display: flex; align-items: center; gap: 8px;
+            margin-bottom: 16px;
+        }
+        .error-msg .retry-btn {
+            margin-left: auto; background: var(--danger); color: #fff;
+            padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* ===== Toast ===== */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            padding: 12px 20px; border-radius: var(--radius-sm);
+            color: #fff; font-size: 0.875rem; font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease-out;
+            max-width: 340px;
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--primary); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            z-index: 200; display: flex; align-items: center; justify-content: center;
+            padding: 20px; animation: fadeIn 0.2s ease;
+        }
+        .modal {
+            background: var(--card); border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); width: 100%; max-width: 420px;
+            animation: scaleIn 0.25s ease;
+        }
+        .modal-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            font-weight: 600; font-size: 1rem;
+        }
+        .modal-body { padding: 20px; }
+        .modal-body input[type="text"] {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem;
+            transition: border-color var(--transition);
+        }
+        .modal-body input[type="text"]:focus { border-color: var(--primary); }
+        .modal-footer {
+            padding: 14px 20px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 8px;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* ===== Image Viewer ===== */
+        .image-viewer-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 300; display: flex; align-items: center; justify-content: center;
+            cursor: zoom-out; animation: fadeIn 0.2s ease;
+        }
+        .image-viewer-overlay img {
+            max-width: 95vw; max-height: 95vh; object-fit: contain;
+            border-radius: 4px;
+        }
+        .image-viewer-close {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(255,255,255,0.15); color: #fff;
+            width: 40px; height: 40px; border-radius: 50%;
+            font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+        }
+        .image-viewer-close:hover { background: rgba(255,255,255,0.3); }
+
+        /* ===== Home Page ===== */
+        .home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .info-card {
+            background: var(--card); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px; display: flex; align-items: center; gap: 16px;
+            transition: all var(--transition); cursor: default;
+        }
+        .info-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .info-card .icon-box {
+            width: 48px; height: 48px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        .info-card .icon-box.blue { background: var(--primary-bg); }
+        .info-card .icon-box.green { background: var(--success-bg); }
+        .info-card .icon-box.orange { background: var(--warning-bg); }
+        .info-card .icon-box.red { background: var(--danger-bg); }
+        .info-card .info-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; }
+        .info-card .info-value { font-size: 1.05rem; font-weight: 600; }
+        .quick-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .quick-link {
+            background: var(--card); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px 16px;
+            text-align: center; cursor: pointer;
+            transition: all var(--transition);
+        }
+        .quick-link:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); background: var(--primary-bg); }
+        .quick-link .icon { font-size: 2rem; margin-bottom: 8px; }
+        .quick-link .label { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+
+        /* ===== Files Page ===== */
+        .breadcrumb {
+            display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+            margin-bottom: 16px; font-size: 0.875rem;
+        }
+        .breadcrumb-item {
+            color: var(--text-muted); cursor: pointer; padding: 4px 6px;
+            border-radius: 4px; transition: all var(--transition);
+        }
+        .breadcrumb-item:hover { color: var(--primary); background: var(--primary-bg); }
+        .breadcrumb-item.active { color: var(--text); font-weight: 600; cursor: default; }
+        .breadcrumb-sep { color: var(--text-muted); font-size: 0.75rem; }
+        .file-toolbar {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .file-list { list-style: none; }
+        .file-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            transition: background var(--transition); cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: var(--primary-bg); }
+        .file-item .file-icon { font-size: 1.3rem; flex-shrink: 0; width: 28px; text-align: center; }
+        .file-item .file-name { flex: 1; font-size: 0.9rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-item .file-meta { font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0; }
+        .file-item .file-actions { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity var(--transition); }
+        .file-item:hover .file-actions { opacity: 1; }
+        .file-item .checkbox { flex-shrink: 0; }
+
+        /* ===== Media Grid ===== */
+        .media-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
+        }
+        .media-thumb {
+            aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden;
+            background: var(--border); cursor: pointer; position: relative;
+            transition: all var(--transition);
+        }
+        .media-thumb:hover { box-shadow: var(--shadow-md); transform: scale(1.02); }
+        .media-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .media-thumb .thumb-placeholder {
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: var(--text-muted);
+        }
+
+        /* ===== Media List ===== */
+        .media-list { list-style: none; }
+        .media-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: var(--radius-sm);
+            transition: background var(--transition); cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+        .media-item:last-child { border-bottom: none; }
+        .media-item:hover { background: var(--primary-bg); }
+        .media-item .media-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .media-item .media-info { flex: 1; min-width: 0; }
+        .media-item .media-name { font-size: 0.9rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .media-item .media-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* ===== Apps Page ===== */
+        .app-list { list-style: none; }
+        .app-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: var(--radius-sm);
+            transition: background var(--transition);
+            border-bottom: 1px solid var(--border);
+        }
+        .app-item:last-child { border-bottom: none; }
+        .app-item:hover { background: var(--primary-bg); }
+        .app-item .app-icon {
+            width: 42px; height: 42px; border-radius: var(--radius-sm);
+            background: var(--primary-bg); display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0; overflow: hidden;
+        }
+        .app-item .app-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .app-item .app-info { flex: 1; min-width: 0; }
+        .app-item .app-name { font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .app-item .app-pkg { font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .app-item .app-version { font-size: 0.78rem; color: var(--text-muted); }
+        .app-search {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; margin-bottom: 16px;
+            transition: border-color var(--transition);
+        }
+        .app-search:focus { border-color: var(--primary); }
+
+        /* ===== Device Info Page ===== */
+        .device-section { margin-bottom: 20px; }
+        .device-section h3 { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .device-field { display: flex; flex-direction: column; gap: 4px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); }
+        .device-field .label { font-size: 0.78rem; color: var(--text-muted); }
+        .device-field .value { font-size: 0.95rem; font-weight: 600; }
+        .storage-bar-wrap { margin-top: 8px; }
+        .storage-bar {
+            height: 12px; background: var(--border); border-radius: 6px; overflow: hidden;
+        }
+        .storage-bar-fill {
+            height: 100%; border-radius: 6px; transition: width 0.6s ease;
+            background: linear-gradient(90deg, var(--primary), #764ba2);
+        }
+        .storage-bar-fill.warning { background: linear-gradient(90deg, var(--warning), #f97316); }
+        .storage-bar-fill.danger { background: linear-gradient(90deg, var(--danger), #ef4444); }
+        .storage-info { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ===== Pagination ===== */
+        .pagination {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 20px;
+        }
+        .pagination .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .hamburger { display: flex; }
+            .page-container { padding: 14px; }
+            .home-grid { grid-template-columns: 1fr; }
+            .quick-links { grid-template-columns: repeat(3, 1fr); }
+            .media-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+            .file-item .file-actions { opacity: 1; }
+            .file-item .file-meta { display: none; }
+            .device-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .quick-links { grid-template-columns: repeat(2, 1fr); }
+            .device-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Transitions ===== */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-enter-active, .slide-leave-active { transition: all 0.25s ease; }
+        .slide-enter-from { opacity: 0; transform: translateY(10px); }
+        .slide-leave-to { opacity: 0; transform: translateY(-10px); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📱 手机NAS</h1>
-        <p>通过浏览器管理你的手机</p>
-        <span class="status">● 服务器运行中</span>
-        <div class="api-test">
-            <h3>API 测试</h3>
-            <button onclick="testSettings()">获取设置</button>
-            <button onclick="testDownloads()">获取下载列表</button>
-            <pre id="result">点击按钮测试 API...</pre>
+<div id="app">
+    <!-- Toast Notifications -->
+    <div class="toast-container">
+        <div v-for="t in toasts" :key="t.id" :class="['toast', t.type]">{{ t.message }}</div>
+    </div>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" :class="{ show: sidebarOpen }" @click="sidebarOpen = false"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ open: sidebarOpen }">
+        <div class="sidebar-header">
+            <span class="logo">&#x1F4F1;</span>
+            <h1>MobileNAS</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <div v-for="item in navItems" :key="item.path"
+                 :class="['nav-item', { active: currentRoute === item.path }]"
+                 @click="navigate(item.path)">
+                <span class="icon">{{ item.icon }}</span>
+                <span>{{ item.label }}</span>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="ws-status">
+                <span class="ws-dot" :class="wsStatus"></span>
+                <span>{{ wsStatus === 'connected' ? 'WebSocket 已连接' : wsStatus === 'connecting' ? '连接中...' : 'WebSocket 未连接' }}</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <button class="hamburger" @click="sidebarOpen = !sidebarOpen">&#x2630;</button>
+                <span class="page-title">{{ currentPageTitle }}</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" @click="refreshCurrentPage" title="刷新">&#x1F504;</button>
+            </div>
+        </header>
+
+        <!-- Router View -->
+        <div class="page-container">
+            <router-view v-slot="{ Component, route }">
+                <transition name="fade" mode="out-in">
+                    <component :is="Component" :key="route.path" />
+                </transition>
+            </router-view>
         </div>
     </div>
-    <script>
-        async function testSettings() {
+
+    <!-- Modal -->
+    <div v-if="modal.show" class="modal-overlay" @click.self="modal.show = false">
+        <div class="modal">
+            <div class="modal-header">{{ modal.title }}</div>
+            <div class="modal-body">
+                <input type="text" v-model="modal.inputValue" :placeholder="modal.placeholder"
+                       @keyup.enter="modal.onConfirm" ref="modalInput" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" @click="modal.show = false">取消</button>
+                <button class="btn btn-primary" @click="modal.onConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Viewer -->
+    <div v-if="imageViewer.show" class="image-viewer-overlay" @click="imageViewer.show = false">
+        <button class="image-viewer-close" @click="imageViewer.show = false">&#x2715;</button>
+        <img :src="imageViewer.src" :alt="imageViewer.name" />
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/vue-router@4/dist/vue-router.global.prod.js"></script>
+<script>
+const { createApp, ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } = Vue;
+const { createRouter, createWebHashHistory, useRouter, useRoute } = VueRouter;
+
+/* ===== Utility Functions ===== */
+function formatSize(bytes) {
+    if (!bytes || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+}
+
+function formatDate(ts) {
+    if (!ts) return '-';
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function getFileIcon(name, isDir) {
+    if (isDir) return '\u{1F4C1}';
+    const ext = (name || '').split('.').pop().toLowerCase();
+    const map = {
+        jpg: '\u{1F5BC}', jpeg: '\u{1F5BC}', png: '\u{1F5BC}', gif: '\u{1F5BC}', webp: '\u{1F5BC}', bmp: '\u{1F5BC}',
+        mp4: '\u{1F3AC}', avi: '\u{1F3AC}', mkv: '\u{1F3AC}', mov: '\u{1F3AC}', wmv: '\u{1F3AC}', flv: '\u{1F3AC}', webm: '\u{1F3AC}',
+        mp3: '\u{1F3B5}', wav: '\u{1F3B5}', flac: '\u{1F3B5}', aac: '\u{1F3B5}', ogg: '\u{1F3B5}', wma: '\u{1F3B5}',
+        pdf: '\u{1F4C4}', doc: '\u{1F4C4}', docx: '\u{1F4C4}', xls: '\u{1F4C4}', xlsx: '\u{1F4C4}', ppt: '\u{1F4C4}', pptx: '\u{1F4C4}',
+        zip: '\u{1F4E6}', rar: '\u{1F4E6}', '7z': '\u{1F4E6}', tar: '\u{1F4E6}', gz: '\u{1F4E6}',
+        apk: '\u{1F4E1}', txt: '\u{1F4C3}', json: '\u{1F4C3}', xml: '\u{1F4C3}', html: '\u{1F4C3}', js: '\u{1F4C3}', py: '\u{1F4C3}',
+    };
+    return map[ext] || '\u{1F4CE}';
+}
+
+async function apiFetch(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: { 'Accept': 'application/json', ...options.headers } });
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return res.json();
+    return res.text();
+}
+
+/* ===== App State ===== */
+const toasts = ref([]);
+let toastId = 0;
+function showToast(message, type = 'info', duration = 3000) {
+    const id = ++toastId;
+    toasts.value.push({ id, message, type });
+    setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id); }, duration);
+}
+
+const sidebarOpen = ref(false);
+const wsStatus = ref('disconnected');
+let ws = null;
+
+const modal = reactive({
+    show: false, title: '', placeholder: '', inputValue: '',
+    onConfirm: () => {}
+});
+
+function openModal(title, placeholder, defaultValue, onConfirm) {
+    modal.title = title;
+    modal.placeholder = placeholder || '';
+    modal.inputValue = defaultValue || '';
+    modal.onConfirm = () => { modal.show = false; onConfirm(modal.inputValue); };
+    modal.show = true;
+    nextTick(() => {
+        const input = document.querySelector('.modal-body input');
+        if (input) input.focus();
+    });
+}
+
+const imageViewer = reactive({ show: false, src: '', name: '' });
+function viewImage(src, name) {
+    imageViewer.src = src;
+    imageViewer.name = name || '';
+    imageViewer.show = true;
+}
+
+/* ===== Navigation ===== */
+const navItems = [
+    { path: '/', icon: '\u{1F3E0}', label: '首页' },
+    { path: '/files', icon: '\u{1F4C2}', label: '文件管理' },
+    { path: '/photos', icon: '\u{1F5BC}', label: '图片' },
+    { path: '/videos', icon: '\u{1F3AC}', label: '视频' },
+    { path: '/audio', icon: '\u{1F3B5}', label: '音频' },
+    { path: '/apps', icon: '\u{1F4F1}', label: '应用' },
+    { path: '/device', icon: '\u{2699}', label: '设备信息' },
+];
+
+const pageTitles = { '/': '首页', '/files': '文件管理', '/photos': '图片', '/videos': '视频', '/audio': '音频', '/apps': '应用管理', '/device': '设备信息' };
+
+/* ===== Home Page Component ===== */
+const HomePage = {
+    setup() {
+        const deviceInfo = ref(null);
+        const loading = ref(true);
+        const error = ref(null);
+        const router = useRouter();
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
             try {
-                const res = await fetch('/api/settings');
-                const data = await res.json();
-                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                deviceInfo.value = await apiFetch('/api/device/info');
             } catch (e) {
-                document.getElementById('result').textContent = 'Error: ' + e.message;
+                error.value = e.message;
+            } finally {
+                loading.value = false;
             }
         }
-        async function testDownloads() {
+
+        onMounted(load);
+
+        const batteryPercent = computed(() => {
+            const info = deviceInfo.value;
+            if (!info) return 0;
+            return info.batteryLevel != null ? info.batteryLevel : (info.battery != null ? info.battery : 0);
+        });
+
+        const storagePercent = computed(() => {
+            const info = deviceInfo.value;
+            if (!info || !info.totalStorage) return 0;
+            return Math.round((info.usedStorage / info.totalStorage) * 100);
+        });
+
+        function navigate(path) { router.push(path); }
+
+        return { deviceInfo, loading, error, load, batteryPercent, storagePercent, navigate, formatSize };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载设备信息...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else>
+            <div class="home-grid">
+                <div class="info-card">
+                    <div class="icon-box blue">&#x1F4F1;</div>
+                    <div><div class="info-label">设备型号</div><div class="info-value">{{ deviceInfo?.model || deviceInfo?.device || '未知' }}</div></div>
+                </div>
+                <div class="info-card">
+                    <div class="icon-box green">&#x1F50B;</div>
+                    <div><div class="info-label">电池电量</div><div class="info-value">{{ batteryPercent }}%</div></div>
+                </div>
+                <div class="info-card">
+                    <div class="icon-box orange">&#x1F4BE;</div>
+                    <div><div class="info-label">存储空间</div><div class="info-value">{{ formatSize(deviceInfo?.usedStorage) }} / {{ formatSize(deviceInfo?.totalStorage) }}</div></div>
+                </div>
+                <div class="info-card">
+                    <div class="icon-box red">&#x1F310;</div>
+                    <div><div class="info-label">IP 地址</div><div class="info-value">{{ deviceInfo?.ip || deviceInfo?.ipAddress || '未知' }}</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">&#x26A1; 快捷入口</div>
+                <div class="quick-links">
+                    <div class="quick-link" @click="navigate('/files')"><div class="icon">&#x1F4C2;</div><div class="label">文件管理</div></div>
+                    <div class="quick-link" @click="navigate('/photos')"><div class="icon">&#x1F5BC;</div><div class="label">图片</div></div>
+                    <div class="quick-link" @click="navigate('/videos')"><div class="icon">&#x1F3AC;</div><div class="label">视频</div></div>
+                    <div class="quick-link" @click="navigate('/audio')"><div class="icon">&#x1F3B5;</div><div class="label">音频</div></div>
+                    <div class="quick-link" @click="navigate('/apps')"><div class="icon">&#x1F4F1;</div><div class="label">应用</div></div>
+                    <div class="quick-link" @click="navigate('/device')"><div class="icon">&#x2699;</div><div class="label">设备信息</div></div>
+                </div>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Files Page Component ===== */
+const FilesPage = {
+    setup() {
+        const route = useRoute();
+        const router = useRouter();
+        const files = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const currentPath = ref('/sdcard');
+        const selectedFiles = ref(new Set());
+
+        async function loadFiles(path) {
+            loading.value = true;
+            error.value = null;
+            selectedFiles.value.clear();
             try {
-                const res = await fetch('/api/downloads');
-                const data = await res.json();
-                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                const queryPath = path || currentPath.value;
+                currentPath.value = queryPath;
+                const data = await apiFetch('/api/files?path=' + encodeURIComponent(queryPath));
+                files.value = Array.isArray(data) ? data : (data.files || data.items || []);
             } catch (e) {
-                document.getElementById('result').textContent = 'Error: ' + e.message;
+                error.value = e.message;
+                files.value = [];
+            } finally {
+                loading.value = false;
             }
         }
-    </script>
+
+        function navigateTo(path) {
+            router.replace({ path: '/files', query: { path } });
+            loadFiles(path);
+        }
+
+        function goUp() {
+            const parts = currentPath.value.split('/').filter(Boolean);
+            parts.pop();
+            const parent = '/' + parts.join('/');
+            navigateTo(parent || '/');
+        }
+
+        function handleFileClick(file) {
+            const path = file.path || (currentPath.value + '/' + file.name);
+            if (file.isDirectory || file.dir) {
+                navigateTo(path);
+            } else {
+                downloadFile(path, file.name);
+            }
+        }
+
+        function downloadFile(path, name) {
+            const url = '/api/files/download?path=' + encodeURIComponent(path);
+            const a = document.createElement('a');
+            a.href = url; a.download = name || ''; a.click();
+            showToast('开始下载: ' + (name || path), 'success');
+        }
+
+        async function deleteSelected() {
+            if (selectedFiles.value.size === 0) { showToast('请先选择文件', 'error'); return; }
+            const paths = Array.from(selectedFiles.value);
+            try {
+                const form = new FormData();
+                form.append('paths', paths.join(','));
+                await fetch('/api/files/delete', { method: 'POST', body: form });
+                showToast('删除成功', 'success');
+                loadFiles(currentPath.value);
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+
+        function deleteFile(file) {
+            const path = file.path || (currentPath.value + '/' + file.name);
+            selectedFiles.value.clear();
+            selectedFiles.value.add(path);
+            deleteSelected();
+        }
+
+        function renameFile(file) {
+            const oldPath = file.path || (currentPath.value + '/' + file.name);
+            openModal('重命名', '请输入新名称', file.name, async (newName) => {
+                if (!newName || newName === file.name) return;
+                try {
+                    const form = new FormData();
+                    form.append('path', oldPath);
+                    form.append('newName', newName);
+                    await fetch('/api/files/rename', { method: 'POST', body: form });
+                    showToast('重命名成功', 'success');
+                    loadFiles(currentPath.value);
+                } catch (e) {
+                    showToast('重命名失败: ' + e.message, 'error');
+                }
+            });
+        }
+
+        function createDir() {
+            openModal('新建文件夹', '请输入文件夹名称', '', async (name) => {
+                if (!name) return;
+                try {
+                    const form = new FormData();
+                    form.append('path', currentPath.value);
+                    form.append('name', name);
+                    await fetch('/api/files/mkdir', { method: 'POST', body: form });
+                    showToast('文件夹创建成功', 'success');
+                    loadFiles(currentPath.value);
+                } catch (e) {
+                    showToast('创建失败: ' + e.message, 'error');
+                }
+            });
+        }
+
+        function toggleSelect(file) {
+            const path = file.path || (currentPath.value + '/' + file.name);
+            if (selectedFiles.value.has(path)) selectedFiles.value.delete(path);
+            else selectedFiles.value.add(path);
+        }
+
+        const breadcrumbs = computed(() => {
+            const parts = currentPath.value.split('/').filter(Boolean);
+            const crumbs = [{ label: '根目录', path: '/' }];
+            let accumulated = '';
+            parts.forEach(p => {
+                accumulated += '/' + p;
+                crumbs.push({ label: p, path: accumulated });
+            });
+            return crumbs;
+        });
+
+        onMounted(() => {
+            const queryPath = route.query.path;
+            if (queryPath) currentPath.value = queryPath;
+            loadFiles(currentPath.value);
+        });
+
+        return {
+            files, loading, error, currentPath, selectedFiles,
+            loadFiles, navigateTo, goUp, handleFileClick, downloadFile,
+            deleteFile, renameFile, createDir, toggleSelect, breadcrumbs,
+            formatSize, formatDate, getFileIcon
+        };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载文件列表...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="loadFiles(currentPath)">重试</button>
+        </div>
+        <div v-else>
+            <div class="breadcrumb">
+                <span v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
+                    <span class="breadcrumb-item" :class="{ active: i === breadcrumbs.length - 1 }" @click="i < breadcrumbs.length - 1 && navigateTo(crumb.path)">{{ crumb.label }}</span>
+                    <span v-if="i < breadcrumbs.length - 1" class="breadcrumb-sep">&#x203A;</span>
+                </span>
+            </div>
+            <div class="file-toolbar">
+                <button class="btn btn-primary btn-sm" @click="createDir">&#x2795; 新建文件夹</button>
+                <button class="btn btn-ghost btn-sm" @click="goUp" :disabled="currentPath === '/'">&#x2190; 返回上级</button>
+                <button class="btn btn-danger btn-sm" v-if="selectedFiles.size > 0" @click="deleteSelected">&#x1F5D1; 删除 ({{ selectedFiles.size }})</button>
+            </div>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <ul class="file-list" v-if="files.length > 0">
+                    <li v-for="file in files" :key="file.path || file.name" class="file-item" @click="handleFileClick(file)">
+                        <span class="file-icon">{{ getFileIcon(file.name, file.isDirectory || file.dir) }}</span>
+                        <span class="file-name">{{ file.name }}</span>
+                        <span class="file-meta">{{ (file.isDirectory || file.dir) ? (file.childCount || '') : formatSize(file.size || file.length) }}</span>
+                        <span class="file-actions">
+                            <button class="btn-icon btn-sm" @click.stop="renameFile(file)" title="重命名">&#x270F;</button>
+                            <button class="btn-icon btn-sm" @click.stop="deleteFile(file)" title="删除" style="color:var(--danger);">&#x1F5D1;</button>
+                        </span>
+                    </li>
+                </ul>
+                <div v-else class="empty-state">
+                    <div class="icon">&#x1F4C2;</div>
+                    <p>此目录为空</p>
+                </div>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Photos Page Component ===== */
+const PhotosPage = {
+    setup() {
+        const images = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const page = ref(1);
+        const pageSize = 50;
+        const hasMore = ref(true);
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
+            try {
+                const data = await apiFetch('/api/media/images?page=' + page.value + '&pageSize=' + pageSize);
+                images.value = Array.isArray(data) ? data : (data.items || data.images || data.list || []);
+                hasMore.value = images.value.length >= pageSize;
+            } catch (e) {
+                error.value = e.message;
+                images.value = [];
+            } finally {
+                loading.value = false;
+            }
+        }
+
+        function getThumbUrl(img) {
+            if (img.thumbnail) return img.thumbnail;
+            if (img.thumbPath) return '/api/files/download?path=' + encodeURIComponent(img.thumbPath);
+            if (img.path) return '/api/files/download?path=' + encodeURIComponent(img.path);
+            return '';
+        }
+
+        function getFullUrl(img) {
+            if (img.path) return '/api/files/download?path=' + encodeURIComponent(img.path);
+            return '';
+        }
+
+        function prevPage() { if (page.value > 1) { page.value--; load(); } }
+        function nextPage() { if (hasMore.value) { page.value++; load(); } }
+
+        onMounted(load);
+
+        return { images, loading, error, page, hasMore, load, getThumbUrl, getFullUrl, viewImage, prevPage, nextPage };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载图片...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else-if="images.length === 0" class="empty-state">
+            <div class="icon">&#x1F5BC;</div><p>没有找到图片</p>
+        </div>
+        <div v-else>
+            <div class="media-grid">
+                <div v-for="img in images" :key="img.path || img.id" class="media-thumb" @click="viewImage(getFullUrl(img), img.name || img.displayName)">
+                    <img v-if="getThumbUrl(img)" :src="getThumbUrl(img)" :alt="img.name || img.displayName" loading="lazy" />
+                    <div v-else class="thumb-placeholder">&#x1F5BC;</div>
+                </div>
+            </div>
+            <div class="pagination" v-if="page > 1 || hasMore">
+                <button class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="prevPage">&#x2190; 上一页</button>
+                <span style="font-size:0.85rem;color:var(--text-muted);">第 {{ page }} 页</span>
+                <button class="btn btn-ghost btn-sm" :disabled="!hasMore" @click="nextPage">下一页 &#x2192;</button>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Videos Page Component ===== */
+const VideosPage = {
+    setup() {
+        const videos = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const page = ref(1);
+        const pageSize = 50;
+        const hasMore = ref(true);
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
+            try {
+                const data = await apiFetch('/api/media/videos?page=' + page.value + '&pageSize=' + pageSize);
+                videos.value = Array.isArray(data) ? data : (data.items || data.videos || data.list || []);
+                hasMore.value = videos.value.length >= pageSize;
+            } catch (e) {
+                error.value = e.message;
+                videos.value = [];
+            } finally {
+                loading.value = false;
+            }
+        }
+
+        function download(video) {
+            const path = video.path || video.dataPath;
+            if (!path) return;
+            const url = '/api/files/download?path=' + encodeURIComponent(path);
+            const a = document.createElement('a');
+            a.href = url; a.download = video.name || video.displayName || ''; a.click();
+            showToast('开始下载: ' + (video.name || video.displayName), 'success');
+        }
+
+        function prevPage() { if (page.value > 1) { page.value--; load(); } }
+        function nextPage() { if (hasMore.value) { page.value++; load(); } }
+
+        onMounted(load);
+
+        return { videos, loading, error, page, hasMore, load, download, formatSize, formatDate, prevPage, nextPage };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载视频列表...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else-if="videos.length === 0" class="empty-state">
+            <div class="icon">&#x1F3AC;</div><p>没有找到视频</p>
+        </div>
+        <div v-else>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <ul class="media-list">
+                    <li v-for="v in videos" :key="v.path || v.id" class="media-item" @click="download(v)">
+                        <span class="media-icon">&#x1F3AC;</span>
+                        <div class="media-info">
+                            <div class="media-name">{{ v.name || v.displayName || '未知视频' }}</div>
+                            <div class="media-meta">{{ formatSize(v.size || v.fileSize) }} &middot; {{ formatDate(v.dateAdded || v.dateModified || v.lastModified) }}</div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" @click.stop="download(v)">&#x2B07; 下载</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="pagination" v-if="page > 1 || hasMore">
+                <button class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="prevPage">&#x2190; 上一页</button>
+                <span style="font-size:0.85rem;color:var(--text-muted);">第 {{ page }} 页</span>
+                <button class="btn btn-ghost btn-sm" :disabled="!hasMore" @click="nextPage">下一页 &#x2192;</button>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Audio Page Component ===== */
+const AudioPage = {
+    setup() {
+        const audios = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const page = ref(1);
+        const pageSize = 50;
+        const hasMore = ref(true);
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
+            try {
+                const data = await apiFetch('/api/media/audio?page=' + page.value + '&pageSize=' + pageSize);
+                audios.value = Array.isArray(data) ? data : (data.items || data.audio || data.list || []);
+                hasMore.value = audios.value.length >= pageSize;
+            } catch (e) {
+                error.value = e.message;
+                audios.value = [];
+            } finally {
+                loading.value = false;
+            }
+        }
+
+        function download(audio) {
+            const path = audio.path || audio.dataPath;
+            if (!path) return;
+            const url = '/api/files/download?path=' + encodeURIComponent(path);
+            const a = document.createElement('a');
+            a.href = url; a.download = audio.name || audio.displayName || ''; a.click();
+            showToast('开始下载: ' + (audio.name || audio.displayName), 'success');
+        }
+
+        function prevPage() { if (page.value > 1) { page.value--; load(); } }
+        function nextPage() { if (hasMore.value) { page.value++; load(); } }
+
+        onMounted(load);
+
+        return { audios, loading, error, page, hasMore, load, download, formatSize, formatDate, prevPage, nextPage };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载音频列表...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else-if="audios.length === 0" class="empty-state">
+            <div class="icon">&#x1F3B5;</div><p>没有找到音频文件</p>
+        </div>
+        <div v-else>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <ul class="media-list">
+                    <li v-for="a in audios" :key="a.path || a.id" class="media-item" @click="download(a)">
+                        <span class="media-icon">&#x1F3B5;</span>
+                        <div class="media-info">
+                            <div class="media-name">{{ a.name || a.displayName || a.title || '未知音频' }}</div>
+                            <div class="media-meta">{{ formatSize(a.size || a.fileSize) }} &middot; {{ a.artist || '' }} {{ a.album ? ' - ' + a.album : '' }}</div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" @click.stop="download(a)">&#x2B07; 下载</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="pagination" v-if="page > 1 || hasMore">
+                <button class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="prevPage">&#x2190; 上一页</button>
+                <span style="font-size:0.85rem;color:var(--text-muted);">第 {{ page }} 页</span>
+                <button class="btn btn-ghost btn-sm" :disabled="!hasMore" @click="nextPage">下一页 &#x2192;</button>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Apps Page Component ===== */
+const AppsPage = {
+    setup() {
+        const apps = ref([]);
+        const loading = ref(true);
+        const error = ref(null);
+        const searchQuery = ref('');
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
+            try {
+                const data = await apiFetch('/api/apps');
+                apps.value = Array.isArray(data) ? data : (data.apps || data.items || data.list || []);
+            } catch (e) {
+                error.value = e.message;
+                apps.value = [];
+            } finally {
+                loading.value = false;
+            }
+        }
+
+        const filteredApps = computed(() => {
+            if (!searchQuery.value) return apps.value;
+            const q = searchQuery.value.toLowerCase();
+            return apps.value.filter(a =>
+                (a.name || '').toLowerCase().includes(q) ||
+                (a.packageName || a.package || '').toLowerCase().includes(q)
+            );
+        });
+
+        function exportApk(app) {
+            const pkg = app.packageName || app.package;
+            if (!pkg) return;
+            const url = '/api/apps/export?package=' + encodeURIComponent(pkg);
+            const a = document.createElement('a');
+            a.href = url; a.download = (app.name || pkg) + '.apk'; a.click();
+            showToast('开始导出: ' + (app.name || pkg), 'success');
+        }
+
+        onMounted(load);
+
+        return { apps, loading, error, searchQuery, filteredApps, load, exportApk };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载应用列表...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else>
+            <input class="app-search" type="text" v-model="searchQuery" placeholder="&#x1F50D; 搜索应用..." />
+            <div class="card" style="padding:0;overflow:hidden;">
+                <ul class="app-list" v-if="filteredApps.length > 0">
+                    <li v-for="app in filteredApps" :key="app.packageName || app.package" class="app-item">
+                        <div class="app-icon">
+                            <img v-if="app.icon" :src="app.icon" :alt="app.name" />
+                            <span v-else>&#x1F4E1;</span>
+                        </div>
+                        <div class="app-info">
+                            <div class="app-name">{{ app.name || '未知应用' }}</div>
+                            <div class="app-pkg">{{ app.packageName || app.package }}</div>
+                        </div>
+                        <span class="app-version">{{ app.versionName || app.version || '' }}</span>
+                        <button class="btn btn-ghost btn-sm" @click="exportApk(app)">&#x2B07; 导出</button>
+                    </li>
+                </ul>
+                <div v-else class="empty-state">
+                    <div class="icon">&#x1F4E1;</div>
+                    <p>{{ searchQuery ? '没有匹配的应用' : '没有找到应用' }}</p>
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--text-muted);">
+                共 {{ filteredApps.length }} 个应用
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Device Info Page Component ===== */
+const DevicePage = {
+    setup() {
+        const info = ref(null);
+        const loading = ref(true);
+        const error = ref(null);
+
+        async function load() {
+            loading.value = true;
+            error.value = null;
+            try {
+                info.value = await apiFetch('/api/device/info');
+            } catch (e) {
+                error.value = e.message;
+            } finally {
+                loading.value = false;
+            }
+        }
+
+        onMounted(load);
+
+        const storagePercent = computed(() => {
+            if (!info.value || !info.value.totalStorage) return 0;
+            return Math.round((info.value.usedStorage / info.value.totalStorage) * 100);
+        });
+
+        const storageClass = computed(() => {
+            const p = storagePercent.value;
+            if (p >= 90) return 'danger';
+            if (p >= 70) return 'warning';
+            return '';
+        });
+
+        const batteryPercent = computed(() => {
+            if (!info.value) return 0;
+            return info.value.batteryLevel != null ? info.value.batteryLevel : (info.value.battery != null ? info.value.battery : 0);
+        });
+
+        return { info, loading, error, load, storagePercent, storageClass, batteryPercent, formatSize };
+    },
+    template: `
+    <div>
+        <div v-if="loading" class="spinner-wrap"><div class="spinner"></div><div class="spinner-text">加载设备信息...</div></div>
+        <div v-else-if="error" class="error-msg">
+            <span>&#x26A0; {{ error }}</span>
+            <button class="retry-btn" @click="load">重试</button>
+        </div>
+        <div v-else>
+            <div class="device-section">
+                <h3>&#x1F4F1; 设备基本信息</h3>
+                <div class="device-grid">
+                    <div class="device-field"><span class="label">设备型号</span><span class="value">{{ info?.model || info?.device || '-' }}</span></div>
+                    <div class="device-field"><span class="label">品牌</span><span class="value">{{ info?.brand || info?.manufacturer || '-' }}</span></div>
+                    <div class="device-field"><span class="label">Android 版本</span><span class="value">{{ info?.androidVersion || info?.version || '-' }}</span></div>
+                    <div class="device-field"><span class="label">SDK 版本</span><span class="value">{{ info?.sdkVersion || info?.sdk || '-' }}</span></div>
+                    <div class="device-field"><span class="label">屏幕分辨率</span><span class="value">{{ info?.resolution || info?.screenResolution || '-' }}</span></div>
+                    <div class="device-field"><span class="label">CPU 架构</span><span class="value">{{ info?.cpuAbi || info?.abi || '-' }}</span></div>
+                </div>
+            </div>
+
+            <div class="device-section">
+                <h3>&#x1F50B; 电池信息</h3>
+                <div class="device-grid">
+                    <div class="device-field"><span class="label">电量</span><span class="value">{{ batteryPercent }}%</span></div>
+                    <div class="device-field"><span class="label">充电状态</span><span class="value">{{ info?.charging || info?.isCharging != null ? (info.isCharging ? '充电中' : '未充电') : '-' }}</span></div>
+                    <div class="device-field"><span class="label">电池温度</span><span class="value">{{ info?.batteryTemperature != null ? info.batteryTemperature + '°C' : '-' }}</span></div>
+                    <div class="device-field"><span class="label">电池健康</span><span class="value">{{ info?.batteryHealth || '-' }}</span></div>
+                </div>
+            </div>
+
+            <div class="device-section">
+                <h3>&#x1F4BE; 存储空间</h3>
+                <div class="card">
+                    <div class="storage-bar-wrap">
+                        <div class="storage-bar">
+                            <div class="storage-bar-fill" :class="storageClass" :style="{ width: storagePercent + '%' }"></div>
+                        </div>
+                        <div class="storage-info">
+                            <span>已使用 {{ formatSize(info?.usedStorage) }}</span>
+                            <span>总计 {{ formatSize(info?.totalStorage) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="device-section">
+                <h3>&#x1F310; 网络信息</h3>
+                <div class="device-grid">
+                    <div class="device-field"><span class="label">WiFi 名称</span><span class="value">{{ info?.wifiSSID || info?.ssid || info?.wifi || '-' }}</span></div>
+                    <div class="device-field"><span class="label">IP 地址</span><span class="value">{{ info?.ip || info?.ipAddress || '-' }}</span></div>
+                    <div class="device-field"><span class="label">服务端口</span><span class="value">{{ info?.port || '-' }}</span></div>
+                    <div class="device-field"><span class="label">网络类型</span><span class="value">{{ info?.networkType || '-' }}</span></div>
+                </div>
+            </div>
+
+            <div class="device-section">
+                <h3>&#x2699; 系统信息</h3>
+                <div class="device-grid">
+                    <div class="device-field"><span class="label">设备序列号</span><span class="value">{{ info?.serialNumber || info?.serial || '-' }}</span></div>
+                    <div class="device-field"><span class="label">设备名称</span><span class="value">{{ info?.deviceName || info?.host || '-' }}</span></div>
+                    <div class="device-field"><span class="label">内存 (RAM)</span><span class="value">{{ info?.totalMemory || info?.ram ? formatSize(info.totalMemory || info.ram) : '-' }}</span></div>
+                    <div class="device-field"><span class="label">可用内存</span><span class="value">{{ info?.availableMemory || info?.freeMemory ? formatSize(info.availableMemory || info.freeMemory) : '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>`
+};
+
+/* ===== Router Setup ===== */
+const router = createRouter({
+    history: createWebHashHistory(),
+    routes: [
+        { path: '/', component: HomePage },
+        { path: '/files', component: FilesPage },
+        { path: '/photos', component: PhotosPage },
+        { path: '/videos', component: VideosPage },
+        { path: '/audio', component: AudioPage },
+        { path: '/apps', component: AppsPage },
+        { path: '/device', component: DevicePage },
+    ]
+});
+
+/* ===== Root App ===== */
+const app = createApp({
+    setup() {
+        const route = useRoute();
+        const routerInstance = useRouter();
+
+        const currentRoute = computed(() => route.path);
+        const currentPageTitle = computed(() => pageTitles[route.path] || 'MobileNAS');
+
+        function navigate(path) {
+            routerInstance.push(path);
+            sidebarOpen.value = false;
+        }
+
+        function refreshCurrentPage() {
+            const key = route.path + '_refresh';
+            window.dispatchEvent(new CustomEvent('refresh-page'));
+            routerInstance.go(0);
+        }
+
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + location.host + '/ws';
+            wsStatus.value = 'connecting';
+            try {
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => { wsStatus.value = 'connected'; };
+                ws.onclose = () => { wsStatus.value = 'disconnected'; setTimeout(connectWebSocket, 5000); };
+                ws.onerror = () => { wsStatus.value = 'disconnected'; };
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'notification' || msg.type === 'event') {
+                            showToast(msg.message || msg.data || '收到事件', 'info');
+                        }
+                    } catch (e) { /* ignore non-JSON messages */ }
+                };
+            } catch (e) {
+                wsStatus.value = 'disconnected';
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+
+        onMounted(() => { connectWebSocket(); });
+        onUnmounted(() => { if (ws) ws.close(); });
+
+        return { toasts, sidebarOpen, wsStatus, modal, imageViewer, navItems, currentRoute, currentPageTitle, navigate, refreshCurrentPage };
+    }
+});
+
+app.use(router);
+app.mount('#app');
+</script>
 </body>
 </html>

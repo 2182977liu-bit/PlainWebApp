@@ -4,6 +4,11 @@ import android.content.Context
 import android.util.Log
 import com.mobilenas.app.data.repository.DownloadRepository
 import com.mobilenas.app.data.repository.SettingsRepository
+import com.mobilenas.app.server.routing.deviceRoutes
+import com.mobilenas.app.server.routing.fileRoutes
+import com.mobilenas.app.server.routing.mediaRoutes
+import com.mobilenas.app.server.routing.appRoutes
+import com.mobilenas.app.util.DeviceUtils
 import com.mobilenas.app.util.FileUtil
 import com.mobilenas.app.util.NetworkUtils
 import io.ktor.http.*
@@ -68,6 +73,7 @@ class KtorServer(private val context: Context) {
         data class DownloadProgress(val taskId: String, val progress: Int, val downloadedSize: Long, val totalSize: Long) : ServerEvent()
         data class DownloadCompleted(val taskId: String) : ServerEvent()
         data class DownloadFailed(val taskId: String, val error: String) : ServerEvent()
+        data class NotificationEvent(val json: String) : ServerEvent()
     }
 
     fun start() {
@@ -156,6 +162,10 @@ class KtorServer(private val context: Context) {
             settingsRoutes()
             browserRoutes()
             cacheRoutes()
+            deviceRoutes(this@KtorServer.context, currentPort)
+            fileRoutes(this@KtorServer.context)
+            mediaRoutes(this@KtorServer.context)
+            appRoutes(this@KtorServer.context)
         }
     }
 
@@ -226,6 +236,7 @@ class KtorServer(private val context: Context) {
                             is ServerEvent.DownloadProgress -> """{"type":"download_progress","taskId":"${event.taskId}","progress":${event.progress},"downloadedSize":${event.downloadedSize},"totalSize":${event.totalSize}}"""
                             is ServerEvent.DownloadCompleted -> """{"type":"download_completed","taskId":"${event.taskId}"}"""
                             is ServerEvent.DownloadFailed -> """{"type":"download_failed","taskId":"${event.taskId}","error":"${event.error}"}"""
+                            is ServerEvent.NotificationEvent -> event.json
                         }
                         outgoing.send(Frame.Text(json))
                     }
